@@ -8,6 +8,7 @@ import { cacheMiddleware, cacheRoutes } from "../../cache/src/index";
 import { connectRedis } from "../../database/redisClient";
 import { recordLatency } from "../lib/latencyStore";
 import { startMetricsAggregator } from "../lib/metricsAggregator";
+import { setIoInstance } from "../lib/socket";
 
 dotenv.config();
 
@@ -78,6 +79,7 @@ const io = new Server(httpServer, {
     origin: CLIENT_URL,
   },
 });
+setIoInstance(io);
 
 io.on("connection", (socket) => {
   console.log("dashboard connected:", socket.id);

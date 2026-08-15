@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getConfig, updateConfig } from "../lib/config";
 import { getRateSummary, resetMetrics } from "../lib/metricStore";
+import { getIoInstance } from "../../gateway/lib/socket";
 
 const router = Router();
 
@@ -10,7 +11,9 @@ router.get("/config", (req, res) => {
 
 router.post("/config", (req, res) => {
   updateConfig(req.body);
-  res.json(getConfig());
+  const newConfig = getConfig();
+  getIoInstance().emit("rate-limiter-config-changed", newConfig);
+  res.json(newConfig);
 });
 
 router.get("/metrics", (req, res) => {

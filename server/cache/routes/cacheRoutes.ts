@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getCacheConfig, updateCacheConfig } from "../lib/config";
 import { getCacheSummary, resetCacheMetrics } from "../lib/cacheStore";
 import { redisClient } from "../../database/redisClient";
+import { getIoInstance } from "../../gateway/lib/socket";
 
 const router = Router();
 
@@ -11,7 +12,9 @@ router.get("/config", (req, res) => {
 
 router.post("/config", (req, res) => {
   updateCacheConfig(req.body);
-  res.json(getCacheConfig());
+  const newConfig = getCacheConfig();
+  getIoInstance().emit("cache-config-changed", newConfig);
+  res.json(newConfig);
 });
 
 router.get("/metrics", (req, res) => {
