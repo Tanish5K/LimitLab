@@ -8,8 +8,12 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch index.ts",
-    "start": "tsx index.ts"
+    "dev": "tsx watch src/index.ts",
+    "dev:database": "tsx watch database/index.ts",
+    "dev:traffic": "tsx watch traffic-generator/src/index.ts",
+    "start": "tsx src/index.ts",
+    "start:database": "tsx src/database/index.ts",
+    "start:traffic": "tsx src/traffic-generator/index.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
