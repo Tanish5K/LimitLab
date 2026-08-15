@@ -4,16 +4,14 @@ import dotenv from "dotenv";
 import { createClient } from "redis";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { getRateLimiter } from "../rate-limiter/src/index";
+import { rateLimiterMiddleware, rateLimiterRoutes } from "../rate-limiter/src/index";
 
 dotenv.config();
 
 const app = express();
-const rateLimiter = getRateLimiter();
 
 app.use(cors());
 app.use(express.json());
-app.use(rateLimiter);
 
 const redisUrl = process.env.REDIS_URL;
 const BACKEND_URL = process.env.BACKEND_URL;
@@ -46,6 +44,16 @@ app.get("/", (req, res) => {
   return res.json({ message: "Server is running" });
 });
 
+app.get("/health", (req, res) => {
+  return res.json({ status: "ok" });
+});
+
+// admin/config routes for the rate limiter
+app.use("/api/rate-limiter", rateLimiterRoutes);
+
+// traffic path - rate limiter middleware is applied here
+app.use("/resource", rateLimiterMiddleware);
+
 app.get("/resource/:id", async (req, res) => {
   const start = Date.now();
   const { id } = req.params;
@@ -58,17 +66,18 @@ app.get("/resource/:id", async (req, res) => {
     const data = await backendRes.json();
 
     const duration = Date.now() - start;
+    console.log(backendRes.status, backendRes.statusText);
     console.log(`[${new Date().toISOString()}] GET /resource/${id} - ${duration}ms`);
 
-    res.json({ ...data, gatewayDurationMs: duration });
+    res.status(backendRes.status).json({
+      ...data,
+      gatewayDurationMs: duration,
+      backendStatus: backendRes.status,
+    });
   } catch (error) {
     console.error("Error proxying to backend:", error);
     res.status(502).json({ error: "Backend unavailable" });
   }
-});
-
-app.get("/health", (req, res) => {
-  return res.json({ status: "ok" });
 });
 
 const httpServer = createServer(app);

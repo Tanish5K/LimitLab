@@ -36,11 +36,24 @@ async function fireRequest(config: TrafficConfig, clientId: number, jobId: strin
   const id = config.resourceMode === "identical" ? 1 : randomId(1000);
 
   try {
-    await fetch(`${GATEWAY_URL}/resource/${id}`, {
+    const res = await fetch(`${GATEWAY_URL}/resource/${id}`, {
       headers: { "x-client-id": String(clientId) },
     });
-    updateJob(jobId, { requestsSent: (getJob(jobId)?.requestsSent ?? 0) + 1 });
+
+    console.log(`[traffic-gen] client=${clientId} resource=${id} status=${res.status}`);
+
+    const job = getJob(jobId);
+    if (!job) return;
+
+    if (res.status === 429) {
+      updateJob(jobId, { requestsRejected: (job.requestsRejected ?? 0) + 1 });
+    } else if (res.ok) {
+      updateJob(jobId, { requestsAllowed: (job.requestsAllowed ?? 0) + 1 });
+    } else {
+      updateJob(jobId, { requestsFailed: (job.requestsFailed ?? 0) + 1 });
+    }
   } catch {
+    console.log(`[traffic-gen] client=${clientId} resource=${id} status=FAILED`);
     updateJob(jobId, { requestsFailed: (getJob(jobId)?.requestsFailed ?? 0) + 1 });
   }
 }
@@ -55,6 +68,8 @@ export function startSimulation(config: TrafficConfig): string {
     status: "running",
     startedAt: Date.now(),
     requestsSent: 0,
+    requestsAllowed: 0,
+    requestsRejected: 0,
     requestsFailed: 0,
   });
 

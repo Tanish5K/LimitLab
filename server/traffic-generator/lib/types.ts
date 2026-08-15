@@ -17,5 +17,7 @@ export interface JobState {
   status: "running" | "done" | "error";
   startedAt: number;
   requestsSent: number;
+  requestsAllowed: number;
+  requestsRejected: number;
   requestsFailed: number;
 }
