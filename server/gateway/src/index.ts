@@ -3,8 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { rateLimiterMiddleware, rateLimiterRoutes } from "../rate-limiter/src/index";
-import { connectRedis } from "../database/redisClient";
+import { rateLimiterMiddleware, rateLimiterRoutes } from "../../rate-limiter/src/index";
+import { cacheMiddleware, cacheRoutes } from "../../cache/src/index";
+import { connectRedis } from "../../database/redisClient";
 
 dotenv.config();
 
@@ -34,11 +35,13 @@ app.get("/health", (req, res) => {
   return res.json({ status: "ok" });
 });
 
-// admin/config routes for the rate limiter
+// admin/config routes for the rate limiter & cache
 app.use("/api/rate-limiter", rateLimiterRoutes);
+app.use("/api/cache", cacheRoutes);
 
-// traffic path - rate limiter middleware is applied here
+// traffic path - rate limiter and cache middleware are applied here
 app.use("/resource", rateLimiterMiddleware);
+app.use("/resource", cacheMiddleware);
 
 app.get("/resource/:id", async (req, res) => {
   const start = Date.now();

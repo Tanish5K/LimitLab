@@ -40,7 +40,20 @@ async function fireRequest(config: TrafficConfig, clientId: number, jobId: strin
       headers: { "x-client-id": String(clientId) },
     });
 
-    console.log(`[traffic-gen] client=${clientId} resource=${id} status=${res.status}`);
+    let cacheStatus = "n/a (cache disabled)";
+    try {
+      const body = await res.clone().json();
+      if (typeof body.cacheHit === "boolean") {
+        cacheStatus = body.cacheHit ? "cache-hit" : "cache-miss";
+      }
+    } catch {
+      // body wasn't JSON
+      console.log(`if you see this, my code is broken..`)
+    }
+
+    console.log(
+      `[traffic-gen] client=${clientId} resource=${id} status=${res.status} ${cacheStatus}`
+    );
 
     const job = getJob(jobId);
     if (!job) return;
