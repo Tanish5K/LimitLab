@@ -1,7 +1,7 @@
 import type { CacheConfig } from "./types";
 
 let currentConfig: CacheConfig = {
-  enabled: false,
+  enabled: true,
   ttlSeconds: 30,
 };
 

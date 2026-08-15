@@ -101,9 +101,8 @@ export function startSimulation(config: TrafficConfig): string {
     const targetRps = rpsAtTime(config, elapsedSeconds);
     const requestsThisTick = Math.round((targetRps * TICK_MS) / 1000);
 
-    console.log(
-      `[traffic-gen] t=${elapsedSeconds.toFixed(1)}s target=${targetRps}rps firing=${requestsThisTick}`
-    );
+    // Logging the current state of the traffic (you can comment it out if you want its not like I care or anything ._.)
+    console.log(`[traffic-gen] t=${elapsedSeconds.toFixed(1)}s target=${targetRps}rps firing=${requestsThisTick}`);
 
     for (let i = 0; i < requestsThisTick; i++) {
       const clientId = randomId(config.clients);
