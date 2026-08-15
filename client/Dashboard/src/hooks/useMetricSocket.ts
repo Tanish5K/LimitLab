@@ -23,6 +23,12 @@ export interface MetricsTick {
     missesDelta: number;
   };
   avgLatencyMs: number;
+  algorithmState:
+    | { type: "leaky-bucket"; totalQueueDepth: number }
+    | { type: "token-bucket"; clients: { clientId: string; tokens: number; capacity: number }[] }
+    | { type: "sliding-window-log"; clients: { clientId: string; count: number }[] }
+    | { type: "sliding-window-counter"; clients: { clientId: string; estimate: number }[] }
+    | null;
 }
 
 const MAX_POINTS = 100;

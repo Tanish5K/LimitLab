@@ -23,3 +23,11 @@ export function createSlidingWindowLogMiddleware(config: { maxRequests: number; 
     res.status(429).json({ error: "Too Many Requests" });
   };
 }
+
+export function getWindowCounts(windowMs: number): { clientId: string; count: number }[] {
+  const now = Date.now();
+  return Array.from(states.entries()).map(([clientId, timestamps]) => ({
+    clientId,
+    count: timestamps.filter((t) => now - t < windowMs).length,
+  }));
+}

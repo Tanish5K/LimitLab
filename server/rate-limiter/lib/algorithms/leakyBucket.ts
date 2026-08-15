@@ -50,3 +50,14 @@ export function createLeakyBucketMiddleware(config: { capacity: number; drainRat
     startDraining(clientId, state);
   };
 }
+
+export function getQueueDepths(): { clientId: string; depth: number }[] {
+  return Array.from(states.entries()).map(([clientId, state]) => ({
+    clientId,
+    depth: state.queue.length,
+  }));
+}
+
+export function getTotalQueueDepth(): number {
+  return Array.from(states.values()).reduce((sum, state) => sum + state.queue.length, 0);
+}

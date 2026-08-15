@@ -3,6 +3,12 @@ import { getRateSummary } from "../../rate-limiter/lib/metricStore";
 import { getCacheSummary } from "../../cache/lib/cacheStore";
 import { getRecentLatencies } from "./latencyStore";
 
+import { getTotalQueueDepth } from "../../rate-limiter/lib/algorithms/leakyBucket";
+import { getTokenLevels } from "../../rate-limiter/lib/algorithms/tokenBucket";
+import { getWindowCounts } from "../../rate-limiter/lib/algorithms/slidingWindowLog";
+import { getWindowEstimates } from "../../rate-limiter/lib/algorithms/slidingWindowCounter";
+import { getConfig } from "../../rate-limiter/src/index";
+
 const INTERVAL_MS = 250;
 
 let lastRateSnapshot = { allowed: 0, rejected: 0, queued: 0, total: 0 };
@@ -18,6 +24,20 @@ export function startMetricsAggregator(io: Server) {
     const rateSummary = getRateSummary();
     const cacheSummary = getCacheSummary();
     const recentLatencies = getRecentLatencies(now - INTERVAL_MS);
+
+    const cfg = getConfig();
+    let algorithmState: unknown = null;
+
+    if (cfg.algorithm === "leaky-bucket") {
+    algorithmState = { type: "leaky-bucket", totalQueueDepth: getTotalQueueDepth() };
+    } else if (cfg.algorithm === "token-bucket") {
+    algorithmState = { type: "token-bucket", clients: getTokenLevels() };
+    } else if (cfg.algorithm === "sliding-window") {
+    algorithmState = cfg.slidingWindow.mode === "log"
+    ? { type: "sliding-window-log", clients: getWindowCounts(cfg.slidingWindow.windowMs) }
+    : { type: "sliding-window-counter", clients: getWindowEstimates(cfg.slidingWindow.windowMs) };
+}
+
 
     const avgLatencyMs = recentLatencies.length
       ? Math.round(recentLatencies.reduce((sum, e) => sum + e.durationMs, 0) / recentLatencies.length)
@@ -62,6 +82,7 @@ export function startMetricsAggregator(io: Server) {
         missesDelta,
       },
       avgLatencyMs,
+      algorithmState,
     });
   }, INTERVAL_MS);
 }

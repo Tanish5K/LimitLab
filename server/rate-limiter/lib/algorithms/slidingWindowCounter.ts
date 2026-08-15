@@ -42,3 +42,15 @@ export function createSlidingWindowCounterMiddleware(config: { maxRequests: numb
     res.status(429).json({ error: "Too Many Requests" });
   };
 }
+
+export function getWindowEstimates(windowMs: number): { clientId: string; estimate: number }[] {
+  const now = Date.now();
+
+  return Array.from(states.entries()).map(([clientId, state]) => {
+    const elapsedInCurrent = now - state.windowStart;
+    const overlapWeight = Math.max(0, 1 - elapsedInCurrent / windowMs);
+    const estimate = state.previousCount * overlapWeight + state.currentCount;
+
+    return { clientId, estimate: Number(estimate.toFixed(2)) };
+  });
+}

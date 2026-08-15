@@ -4,6 +4,7 @@ import { recordEvent } from "../metricStore";
 interface Bucket {
   tokens: number;
   lastRefill: number;
+  capacity: number;
 }
 
 const buckets = new Map<string, Bucket>();
@@ -15,7 +16,7 @@ export function createTokenBucketMiddleware(config: { capacity: number; refillRa
 
     let bucket = buckets.get(clientId);
     if (!bucket) {
-      bucket = { tokens: config.capacity, lastRefill: now };
+      bucket = { tokens: config.capacity, lastRefill: now, capacity: config.capacity };
       buckets.set(clientId, bucket);
     }
 
@@ -33,4 +34,12 @@ export function createTokenBucketMiddleware(config: { capacity: number; refillRa
     recordEvent({ timestamp: now, clientId, algorithm: "token-bucket", result: "rejected" });
     res.status(429).json({ error: "Too Many Requests" });
   };
+}
+
+export function getTokenLevels(): { clientId: string; tokens: number; capacity: number }[] {
+  return Array.from(buckets.entries()).map(([clientId, bucket]) => ({
+    clientId,
+    tokens: Math.floor(bucket.tokens),
+    capacity: bucket.capacity ?? 0,
+  }));
 }
