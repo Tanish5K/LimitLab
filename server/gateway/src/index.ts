@@ -9,6 +9,8 @@ import { connectRedis } from "../../database/redisClient";
 import { recordLatency } from "../lib/latencyStore";
 import { startMetricsAggregator } from "../lib/metricsAggregator";
 import { setIoInstance } from "../lib/socket";
+import { getConfig as getRateLimiterConfig } from "../../rate-limiter/src/index";
+import { getCacheConfig } from "../../cache/lib/config";
 
 dotenv.config();
 
@@ -83,6 +85,11 @@ setIoInstance(io);
 
 io.on("connection", (socket) => {
   console.log("dashboard connected:", socket.id);
+
+  socket.emit("initial-config", {
+    rateLimiter: getRateLimiterConfig(),
+    cache: getCacheConfig(),
+  });
 
   socket.on("disconnect", () => {
     console.log("dashboard disconnected:", socket.id);
