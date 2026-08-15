@@ -1,10 +1,10 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { createClient } from "redis";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { rateLimiterMiddleware, rateLimiterRoutes } from "../rate-limiter/src/index";
+import { connectRedis } from "../database/redisClient";
 
 dotenv.config();
 
@@ -13,14 +13,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const redisUrl = process.env.REDIS_URL;
 const BACKEND_URL = process.env.BACKEND_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
 const BACKEND_PORT = process.env.BACKEND_PORT;
 
-if (!redisUrl) {
-  throw new Error("REDIS_URL is not defined in .env");
-}
 if (!BACKEND_URL) {
   throw new Error("BACKEND_URL is not defined in .env");
 }
@@ -28,17 +24,7 @@ if (!BACKEND_PORT) {
   throw new Error("BACKEND_PORT is not defined in .env");
 }
 
-const redisClient = createClient({
-  url: redisUrl,
-});
-
-redisClient.on("error", (error) => {
-  console.error("Redis Client Error:", error);
-});
-
-await redisClient.connect();
-
-console.log("Connected to Redis");
+await connectRedis();
 
 app.get("/", (req, res) => {
   return res.json({ message: "Server is running" });

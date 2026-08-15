@@ -1,4 +1,4 @@
-# Routes
+# Server Routes (Running on Port 3000)
 GET  /                          -> health check message  
 GET  /health                    -> health check  
 GET  /resource/:id              -> proxies to backend, rate-limited  
