@@ -4,13 +4,16 @@ import dotenv from "dotenv";
 import { createClient } from "redis";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { getRateLimiter } from "../rate-limiter/src/index";
 
 dotenv.config();
 
 const app = express();
+const rateLimiter = getRateLimiter();
 
 app.use(cors());
 app.use(express.json());
+app.use(rateLimiter);
 
 const redisUrl = process.env.REDIS_URL;
 const BACKEND_URL = process.env.BACKEND_URL;
