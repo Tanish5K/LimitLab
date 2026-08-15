@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getConfig, updateConfig } from "../lib/config";
-import { getSummary, resetMetrics } from "../lib/metricStore";
+import { getRateSummary, resetMetrics } from "../lib/metricStore";
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.post("/config", (req, res) => {
 });
 
 router.get("/metrics", (req, res) => {
-  res.json(getSummary());
+  res.json(getRateSummary());
 });
 
 router.post("/metrics/reset", (req, res) => {

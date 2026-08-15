@@ -6,6 +6,7 @@ import { Server } from "socket.io";
 import { rateLimiterMiddleware, rateLimiterRoutes } from "../../rate-limiter/src/index";
 import { cacheMiddleware, cacheRoutes } from "../../cache/src/index";
 import { connectRedis } from "../../database/redisClient";
+import { recordLatency } from "../lib/latencyStore";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.get("/resource/:id", async (req, res) => {
     const duration = Date.now() - start;
     console.log(backendRes.status, backendRes.statusText);
     console.log(`[${new Date().toISOString()}] GET /resource/${id} - ${duration}ms`);
+    recordLatency({ timestamp: Date.now(), durationMs: duration, source: "backend" });
 
     res.status(backendRes.status).json({
       ...data,

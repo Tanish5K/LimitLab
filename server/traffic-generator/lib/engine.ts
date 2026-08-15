@@ -1,4 +1,5 @@
 import type { TrafficConfig } from "./types";
+import { Server } from "socket.io";
 import { createJob, updateJob, getJob } from "./jobStore";
 
 const GATEWAY_URL = process.env.GATEWAY_URL || "http://localhost:3000";
@@ -31,6 +32,11 @@ function rpsAtTime(config: TrafficConfig, elapsedSeconds: number): number {
   return rps;
 }
 
+let io: Server | null = null;
+export function setIo(serverIo: Server) {
+  io = serverIo;
+}
+
 //fires a request & updates jobs
 async function fireRequest(config: TrafficConfig, clientId: number, jobId: string) {
   const id = config.resourceMode === "identical" ? 1 : randomId(1000);
@@ -54,6 +60,14 @@ async function fireRequest(config: TrafficConfig, clientId: number, jobId: strin
     console.log(
       `[traffic-gen] client=${clientId} resource=${id} status=${res.status} ${cacheStatus}`
     );
+    io?.emit("request-event", {
+      timestamp: Date.now(),
+      jobId,
+      clientId,
+      resourceId: id,
+      status: res.status,
+      cacheStatus,
+    });
 
     const job = getJob(jobId);
     if (!job) return;
@@ -67,9 +81,21 @@ async function fireRequest(config: TrafficConfig, clientId: number, jobId: strin
     }
   } catch {
     console.log(`[traffic-gen] client=${clientId} resource=${id} status=FAILED`);
+    io?.emit("request-event", {
+      timestamp: Date.now(),
+      jobId,
+      clientId,
+      resourceId: id,
+      status: null,
+      cacheHit: null,
+      failed: true,
+    });
+    
     updateJob(jobId, { requestsFailed: (getJob(jobId)?.requestsFailed ?? 0) + 1 });
   }
 }
+
+const activeIntervals = new Map<string, NodeJS.Timeout>();
 
 //starts a traffic simulation based on the provided configuration
 export function startSimulation(config: TrafficConfig): string {
@@ -94,6 +120,7 @@ export function startSimulation(config: TrafficConfig): string {
     if (elapsedSeconds >= config.durationSeconds) {
       clearInterval(interval);
       updateJob(jobId, { status: "done" });
+      activeIntervals.delete(jobId);
       console.log(`[traffic-gen] job ${jobId} done`);
       return;
     }
@@ -110,5 +137,17 @@ export function startSimulation(config: TrafficConfig): string {
     }
   }, TICK_MS);
 
+  activeIntervals.set(jobId, interval);
   return jobId;
+}
+
+export function stopSimulation(jobId: string): boolean {
+  const interval = activeIntervals.get(jobId);
+  if (!interval) return false;
+
+  clearInterval(interval);
+  activeIntervals.delete(jobId);
+  updateJob(jobId, { status: "stopped" });
+  console.log(`[traffic-gen] job ${jobId} stopped manually`);
+  return true;
 }

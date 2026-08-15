@@ -1,11 +1,22 @@
 import express from "express";
-import { startSimulation } from "../lib/engine";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { startSimulation, stopSimulation, setIo } from "../lib/engine";
 import { getJob } from "../lib/jobStore";
 
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.TRAFFIC_GEN_PORT || 5000;
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: process.env.CLIENT_URL || "http://localhost:5173" },
+});
+
+setIo(io);
+
+io.on("connection", (socket) => {
+  console.log("dashboard connected to traffic-gen:", socket.id);
+});
 
 app.post("/simulate", (req, res) => {
   const jobId = startSimulation(req.body);
@@ -18,6 +29,13 @@ app.get("/simulate/:jobId", (req, res) => {
   res.json(job);
 });
 
-app.listen(PORT, () => {
+app.post("/simulate/:jobId/stop", (req, res) => {
+  const stopped = stopSimulation(req.params.jobId);
+  if (!stopped) return res.status(404).json({ error: "job not found or already finished" });
+  res.json({ ok: true });
+});
+
+const PORT = process.env.TRAFFIC_GEN_PORT || 5000;
+httpServer.listen(PORT, () => {
   console.log(`Traffic generator running on port ${PORT}`);
 });

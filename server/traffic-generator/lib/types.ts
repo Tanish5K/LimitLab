@@ -14,7 +14,7 @@ export interface TrafficConfig {
 export interface JobState {
   id: string;
   config: TrafficConfig;
-  status: "running" | "done" | "error";
+  status: "running" | "done" | "stopped" | "error";
   startedAt: number;
   requestsSent: number;
   requestsAllowed: number;

@@ -13,7 +13,7 @@ export function recordEvent(event: MetricEvent) {
   events.push(event);
 }
 
-export function getSummary() {
+export function getRateSummary() {
   return {
     allowed: events.filter((e) => e.result === "allowed").length,
     rejected: events.filter((e) => e.result === "rejected").length,
