@@ -40,13 +40,15 @@ export function setIo(serverIo: Server) {
 //fires a request & updates jobs
 async function fireRequest(config: TrafficConfig, clientId: number, jobId: string) {
   const id = config.resourceMode === "identical" ? 1 : randomId(1000);
+  const reqStart = Date.now();
 
   try {
     const res = await fetch(`${GATEWAY_URL}/resource/${id}`, {
       headers: { "x-client-id": String(clientId) },
     });
+    const durationMs = Date.now() - reqStart
 
-    let cacheStatus = "n/a (cache disabled)";
+    let cacheStatus: "cache-hit" | "cache-miss" | "n/a" = "n/a";
     try {
       const body = await res.clone().json();
       if (typeof body.cacheHit === "boolean") {
@@ -67,6 +69,7 @@ async function fireRequest(config: TrafficConfig, clientId: number, jobId: strin
       resourceId: id,
       status: res.status,
       cacheStatus,
+      durationMs,
     });
 
     const job = getJob(jobId);
@@ -87,10 +90,11 @@ async function fireRequest(config: TrafficConfig, clientId: number, jobId: strin
       clientId,
       resourceId: id,
       status: null,
-      cacheHit: null,
+      cacheStatus: null,
+      durationMs: null,
       failed: true,
     });
-    
+
     updateJob(jobId, { requestsFailed: (getJob(jobId)?.requestsFailed ?? 0) + 1 });
   }
 }

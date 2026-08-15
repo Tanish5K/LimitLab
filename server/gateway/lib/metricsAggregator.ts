@@ -26,18 +26,6 @@ export function startMetricsAggregator(io: Server) {
     const recentLatencies = getRecentLatencies(now - INTERVAL_MS);
 
     const cfg = getConfig();
-    let algorithmState: unknown = null;
-
-    if (cfg.algorithm === "leaky-bucket") {
-    algorithmState = { type: "leaky-bucket", totalQueueDepth: getTotalQueueDepth() };
-    } else if (cfg.algorithm === "token-bucket") {
-    algorithmState = { type: "token-bucket", clients: getTokenLevels() };
-    } else if (cfg.algorithm === "sliding-window") {
-    algorithmState = cfg.slidingWindow.mode === "log"
-    ? { type: "sliding-window-log", clients: getWindowCounts(cfg.slidingWindow.windowMs) }
-    : { type: "sliding-window-counter", clients: getWindowEstimates(cfg.slidingWindow.windowMs) };
-}
-
 
     const avgLatencyMs = recentLatencies.length
       ? Math.round(recentLatencies.reduce((sum, e) => sum + e.durationMs, 0) / recentLatencies.length)
@@ -57,6 +45,17 @@ export function startMetricsAggregator(io: Server) {
 
     lastRateSnapshot = rateSummary;
     lastCacheSnapshot = cacheSummary;
+
+    let algorithmState: unknown = null;
+    if (cfg.algorithm === "leaky-bucket") {
+    algorithmState = { type: "leaky-bucket", totalQueueDepth: getTotalQueueDepth() };
+    } else if (cfg.algorithm === "token-bucket") {
+    algorithmState = { type: "token-bucket", clients: getTokenLevels() };
+    } else if (cfg.algorithm === "sliding-window") {
+    algorithmState = cfg.slidingWindow.mode === "log"
+    ? { type: "sliding-window-log", clients: getWindowCounts(cfg.slidingWindow.windowMs) }
+    : { type: "sliding-window-counter", clients: getWindowEstimates(cfg.slidingWindow.windowMs) };
+    }
 
     io.emit("metrics", {
       timestamp: now,
