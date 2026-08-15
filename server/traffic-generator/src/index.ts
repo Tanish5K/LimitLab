@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
@@ -6,6 +7,7 @@ import { getJob } from "../lib/jobStore";
 
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" }));
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {

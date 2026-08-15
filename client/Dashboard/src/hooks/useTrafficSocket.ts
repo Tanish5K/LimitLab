@@ -7,16 +7,23 @@ export interface RequestEvent {
   clientId: number;
   resourceId: number;
   status: number | null;
-  cacheHit: boolean | null;
+  cacheStatus: "cache-hit" | "cache-miss" | "n/a";
   failed?: boolean;
 }
 
 const MAX_EVENTS = 200;
 
 export function useTrafficSocket() {
+  const [connected, setConnected] = useState(false);
   const [events, setEvents] = useState<RequestEvent[]>([]);
 
   useEffect(() => {
+    function handleConnect() {
+      setConnected(true);
+    }
+    function handleDisconnect() {
+      setConnected(false);
+    }
     function handleEvent(event: RequestEvent) {
       setEvents((prev) => {
         const next = [...prev, event];
@@ -24,11 +31,16 @@ export function useTrafficSocket() {
       });
     }
 
+    trafficGenSocket.on("connect", handleConnect);
+    trafficGenSocket.on("disconnect", handleDisconnect);
     trafficGenSocket.on("request-event", handleEvent);
+
     return () => {
+      trafficGenSocket.off("connect", handleConnect);
+      trafficGenSocket.off("disconnect", handleDisconnect);
       trafficGenSocket.off("request-event", handleEvent);
     };
   }, []);
 
-  return events;
+  return { connected, events };
 }

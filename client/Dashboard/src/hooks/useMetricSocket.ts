@@ -3,23 +3,31 @@ import { socket } from "../lib/metricSocket";
 
 export interface MetricsTick {
   timestamp: number;
-  requestsPerSec: number;
-  allowed: number;
-  rejected: number;
-  queued: number;
-  cacheHits: number;
-  cacheMisses: number;
-  cacheHitRate: number | null;
-  avgLatencyMs: number;
-  cumulative: {
-    rate: { allowed: number; rejected: number; queued: number; total: number };
-    cache: { hits: number; misses: number; total: number; hitRate: number };
+  rate: {
+    allowed: number;
+    rejected: number;
+    queued: number;
+    total: number;
+    allowedRatio: number | null;
+    rejectedRatio: number | null;
+    requestsPerSec: number;
+    allowedDelta: number;
+    rejectedDelta: number;
   };
+  cache: {
+    hits: number;
+    misses: number;
+    total: number;
+    hitRate: number;
+    hitsDelta: number;
+    missesDelta: number;
+  };
+  avgLatencyMs: number;
 }
 
 const MAX_POINTS = 100;
 
-export function useMetricsSocket() {
+export function useMetricSocket() {
   const [connected, setConnected] = useState(false);
   const [ticks, setTicks] = useState<MetricsTick[]>([]);
 
