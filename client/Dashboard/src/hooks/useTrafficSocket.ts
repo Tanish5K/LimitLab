@@ -8,6 +8,7 @@ export interface RequestEvent {
   resourceId: number;
   status: number | null;
   cacheStatus: "cache-hit" | "cache-miss" | "n/a";
+  durationMs: number;
   failed?: boolean;
 }
 
