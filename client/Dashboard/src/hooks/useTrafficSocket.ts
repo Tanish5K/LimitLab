@@ -15,7 +15,7 @@ export interface RequestEvent {
 const MAX_EVENTS = 200;
 
 export function useTrafficSocket() {
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(trafficGenSocket.connected);
   const [events, setEvents] = useState<RequestEvent[]>([]);
 
   useEffect(() => {

@@ -19,6 +19,7 @@ export function createTokenBucketMiddleware(config: { capacity: number; refillRa
       bucket = { tokens: config.capacity, lastRefill: now, capacity: config.capacity };
       buckets.set(clientId, bucket);
     }
+    bucket.capacity = config.capacity
 
     // lazy refill
     const elapsedSec = (now - bucket.lastRefill) / 1000;

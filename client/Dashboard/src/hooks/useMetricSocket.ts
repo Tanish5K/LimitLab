@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { socket } from "../lib/metricSocket";
+import { metricSocket } from "../lib/metricSocket";
 
 export interface MetricsTick {
   timestamp: number;
@@ -34,7 +34,7 @@ export interface MetricsTick {
 const MAX_POINTS = 100;
 
 export function useMetricSocket() {
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(metricSocket.connected); // was: useState(false)
   const [ticks, setTicks] = useState<MetricsTick[]>([]);
 
   useEffect(() => {
@@ -51,14 +51,14 @@ export function useMetricSocket() {
       });
     }
 
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-    socket.on("metrics", handleMetrics);
+    metricSocket.on("connect", handleConnect);
+    metricSocket.on("disconnect", handleDisconnect);
+    metricSocket.on("metrics", handleMetrics);
 
     return () => {
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-      socket.off("metrics", handleMetrics);
+      metricSocket.off("connect", handleConnect);
+      metricSocket.off("disconnect", handleDisconnect);
+      metricSocket.off("metrics", handleMetrics);
     };
   }, []);
 
