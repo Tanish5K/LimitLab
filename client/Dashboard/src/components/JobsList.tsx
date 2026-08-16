@@ -1,13 +1,21 @@
 import type { JobRecord } from "../lib/types";
 
+interface JobStats {
+  requestsSent: number;
+  requestsAllowed: number;
+  requestsRejected: number;
+  requestsFailed: number;
+  status: JobRecord["status"];
+}
+
 interface JobsListProps {
-  jobs: JobRecord[];
+  jobsWithStats: { job: JobRecord; stats: JobStats }[];
   selectedJobId: string | null;
   onSelect: (jobId: string) => void;
   onStop: (jobId: string) => void;
 }
 
-export function JobsList({ jobs, selectedJobId, onSelect, onStop }: JobsListProps) {
+export function JobsList({ jobsWithStats, selectedJobId, onSelect, onStop }: JobsListProps) {
   return (
     <section id="jobs-list-panel" className="chart-card">
       <h2 className="chart-title">Jobs</h2>
@@ -27,7 +35,7 @@ export function JobsList({ jobs, selectedJobId, onSelect, onStop }: JobsListProp
           </tr>
         </thead>
         <tbody>
-          {jobs.map((job) => (
+          {jobsWithStats.map(({ job, stats }) => (
             <tr
               key={job.jobId}
               className={job.jobId === selectedJobId ? "selected-job-row" : ""}
@@ -38,12 +46,12 @@ export function JobsList({ jobs, selectedJobId, onSelect, onStop }: JobsListProp
               <td>{job.trafficConfig.rps}</td>
               <td>{job.rateLimiterConfig.algorithm}</td>
               <td>{job.cacheConfig.enabled ? `on (${job.cacheConfig.ttlSeconds}s)` : "off"}</td>
-              <td>{job.status}</td>
-              <td>{job.liveState?.requestsSent ?? "—"}</td>
-              <td>{job.liveState?.requestsAllowed ?? "—"}</td>
-              <td>{job.liveState?.requestsRejected ?? "—"}</td>
+              <td>{stats.status}</td>
+              <td>{stats.requestsSent}</td>
+              <td>{stats.requestsAllowed}</td>
+              <td>{stats.requestsRejected}</td>
               <td>
-                {job.status === "running" && (
+                {stats.status === "running" && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

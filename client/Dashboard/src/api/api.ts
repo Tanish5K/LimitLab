@@ -1,4 +1,4 @@
-import type { TrafficConfig, RateLimiterConfig, CacheConfig, JobState } from "../lib/types";
+import type { TrafficConfig, RateLimiterConfig, CacheConfig } from "../lib/types";
 
 const GATEWAY_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 const TRAFFIC_GEN_URL = import.meta.env.VITE_TRAFFIC_GEN_URL || "http://localhost:5000";
@@ -32,11 +32,6 @@ export async function startSimulation(config: TrafficConfig): Promise<{ jobId: s
 
 export async function stopSimulation(jobId: string) {
   const res = await fetch(`${TRAFFIC_GEN_URL}/simulate/${jobId}/stop`, { method: "POST" });
-  return res.json();
-}
-
-export async function getJobStatus(jobId: string): Promise<JobState> {
-  const res = await fetch(`${TRAFFIC_GEN_URL}/simulate/${jobId}`);
   return res.json();
 }
 

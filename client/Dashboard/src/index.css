@@ -1,8 +1,36 @@
-body {
-  margin: 0;
-  font-family: sans-serif;
+/* ============================================================
+   GLOBAL LAYOUT
+   Targets the outermost page wrapper and top header bar.
+   ============================================================ */
+#dashboard-root {
+  /* whole-page container */
 }
 
+.dashboard-title {
+  /* "Limit Lab" heading text, top-left */
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+#dashboard-header {
+  /* row containing the title + connection status indicators */
+}
+
+#metrics-connection-status {
+  /* "gateway: connected/disconnected" text */
+}
+
+#trafficgen-connection-status {
+  /* "traffic-gen: connected/disconnected" text */
+}
+
+/* ============================================================
+   SHARED CARD STYLING
+   Reused by every panel below (config form, jobs list, each
+   chart, algorithm state view, live requests table). Restyling
+   this affects all of them at once — use per-section overrides
+   below if you want one panel to look different from the rest.
+   ============================================================ */
 .chart-card {
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -10,33 +38,125 @@ body {
 }
 
 .chart-title {
+  /* heading text inside any .chart-card */
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
-.dashboard-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+/* ============================================================
+   JOB CONFIG FORM
+   The "New Job" panel where traffic/rate-limiter/cache settings
+   are chosen before starting a run.
+   ============================================================ */
+#job-config-form {
+  /* the whole form */
 }
 
-table {
+#traffic-config-fields {
+  /* pattern / rps / duration / clients / resource mode / spike inputs */
+}
+
+#rate-limiter-config-fields {
+  /* algorithm dropdown + capacity/refill/drain/window inputs */
+}
+
+#cache-config-fields {
+  /* cache enabled checkbox + TTL input */
+}
+
+#start-job-btn {
+  /* "start job" submit button */
+}
+
+/* ============================================================
+   JOBS LIST
+   Table of every job started this session, selectable to view
+   its charts below.
+   ============================================================ */
+#jobs-list-panel {
+  /* whole panel wrapping the jobs table */
+}
+
+#jobs-table {
+  /* the table element itself */
   border-collapse: collapse;
   width: 100%;
 }
 
-th, td {
+#jobs-table th,
+#jobs-table td {
   text-align: left;
   padding: 4px 8px;
   border-bottom: 1px solid #eee;
 }
 
 .selected-job-row {
+  /* highlights whichever job row is currently selected */
   background-color: #eef;
   cursor: pointer;
 }
 
+/* ============================================================
+   GLOBAL METRICS PANEL
+   Gateway-wide totals across ALL jobs combined (not per-job) —
+   allowed/rejected/queued/cache hits/misses/hit rate/latency,
+   plus reset + invalidate-cache controls.
+   ============================================================ */
+#global-metrics-panel {
+  /* whole panel */
+}
+
+#global-metrics-summary {
+  /* row of stat labels e.g. "allowed: 83" */
+}
+
+#reset-metrics-btn {
+  /* clears rate-limiter + cache totals */
+}
+
+#invalidate-cache-btn {
+  /* clears all Redis cache keys */
+}
+
+/* ============================================================
+   PER-JOB LIVE CHARTS
+   Only rendered once a job is selected. Each chart is its own
+   .chart-card, individually targetable by id.
+   ============================================================ */
+#job-charts-panel {
+  /* grid wrapping all four charts below */
+}
+
+#requests-per-sec-chart {
+  /* line chart: total requests per second, selected job only */
+}
+
+#allowed-rejected-chart {
+  /* stacked bar chart: allowed (green) vs rejected (red) per second */
+}
+
+#cache-hit-rate-chart {
+  /* line chart: cache hit rate %, selected job only */
+}
+
+#latency-chart {
+  /* line chart: avg response latency (ms), selected job only */
+}
+
+/* ============================================================
+   ALGORITHM LIVE STATE
+   Shape changes depending on which algorithm is active:
+   token bucket shows per-client gauges, leaky bucket shows a
+   single queue-depth number, sliding window shows per-client
+   counts/estimates.
+   ============================================================ */
+#algorithm-state-view {
+  /* whole panel, contents vary by active algorithm */
+}
+
 .token-gauge-track {
+  /* background track behind each client's token gauge bar */
   height: 10px;
   background-color: #eee;
   border-radius: 4px;
@@ -44,11 +164,53 @@ th, td {
 }
 
 .token-gauge-fill {
+  /* the green fill inside a token gauge, width = tokens/capacity */
   height: 100%;
   background-color: #4ade80;
 }
 
-input, select, button {
+/* ============================================================
+   LIVE REQUESTS TABLE
+   Raw per-request feed for the selected job — newest first,
+   capped to the most recent 25 rows.
+   ============================================================ */
+#request-events-panel {
+  /* whole panel */
+}
+
+#request-events-table {
+  /* the table element itself */
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#request-events-table th,
+#request-events-table td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+#no-job-selected-message {
+  /* shown in place of charts/table when no job is selected yet */
+}
+
+/* ============================================================
+   BASE ELEMENT DEFAULTS
+   Generic fallback styling for raw form elements/body, not
+   scoped to any specific component.
+   ============================================================ */
+body {
+  margin: 0;
+  font-family: sans-serif;
+}
+
+input,
+select,
+button {
   padding: 4px 6px;
 }
 

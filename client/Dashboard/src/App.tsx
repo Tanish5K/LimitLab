@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMetricSocket } from "./hooks/useMetricSocket";
 import { useTrafficSocket } from "./hooks/useTrafficSocket";
 import type { RequestEvent } from "./hooks/useTrafficSocket";
@@ -11,7 +11,7 @@ import { LatencyChart } from "./components/charts/LatencyChart";
 import { AlgorithmStateView } from "./components/AlgorithmStateView";
 import { RequestEventsTable } from "./components/RequestEventTable";
 import { bucketEventsBySecond } from "./lib/bucketing";
-import { getJobStatus, stopSimulation, resetMetrics, invalidateCache } from "./api/api";
+import { stopSimulation, resetMetrics, invalidateCache } from "./api/api";
 import type { JobRecord } from "./lib/types";
 
 function getJobStats(job: JobRecord, events: RequestEvent[]) {
@@ -37,26 +37,10 @@ function App() {
 
   const latestTick = ticks[ticks.length - 1];
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const running = jobs.filter((j) => j.status === "running");
-      if (running.length === 0) return;
-
-      const updates = await Promise.all(
-        running.map(async (job) => ({ jobId: job.jobId, liveState: await getJobStatus(job.jobId) }))
-      );
-
-      setJobs((prev) =>
-        prev.map((job) => {
-          const update = updates.find((u) => u.jobId === job.jobId);
-          if (!update) return job;
-          return { ...job, liveState: update.liveState, status: update.liveState.status };
-        })
-      );
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [jobs]);
+  const jobsWithStats = useMemo(
+    () => jobs.map((job) => ({ job, stats: getJobStats(job, events) })),
+    [jobs, events]
+  );
 
   function handleJobStarted(data: {
     jobId: string;
@@ -88,7 +72,7 @@ function App() {
       </header>
 
       <JobConfigForm onJobStarted={handleJobStarted} />
-      <JobsList jobs={jobs} selectedJobId={selectedJobId} onSelect={setSelectedJobId} onStop={handleStopJob} />
+      <JobsList jobsWithStats={jobsWithStats} selectedJobId={selectedJobId} onSelect={setSelectedJobId} onStop={handleStopJob} />
 
       <section id="global-metrics-panel" className="chart-card">
         <div className="flex justify-between items-center">
