@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useMetricSocket } from "./hooks/useMetricSocket";
-import { useTrafficSocket } from "./hooks/useTrafficSocket";
+import { useTrafficSocket, useJobStatusEvents } from "./hooks/useTrafficSocket";
 import type { RequestEvent } from "./hooks/useTrafficSocket";
 import { JobConfigForm } from "./components/JobConfigForm";
 import { JobsList } from "./components/JobsList";
@@ -14,6 +14,7 @@ import { bucketEventsBySecond } from "./lib/bucketing";
 import { stopSimulation, resetMetrics, invalidateCache } from "./api/api";
 import type { JobRecord } from "./lib/types";
 
+
 function getJobStats(job: JobRecord, events: RequestEvent[]) {
   const jobEvents = events.filter((e) => e.jobId === job.jobId);
   const requestsSent = jobEvents.length;
@@ -21,11 +22,7 @@ function getJobStats(job: JobRecord, events: RequestEvent[]) {
   const requestsRejected = jobEvents.filter((e) => e.status === 429).length;
   const requestsFailed = jobEvents.filter((e) => e.failed).length;
 
-  const expectedEnd = job.createdAt + job.trafficConfig.durationSeconds * 1000;
-  const status: JobRecord["status"] =
-    job.status === "stopped" ? "stopped" : Date.now() >= expectedEnd ? "done" : "running";
-
-  return { requestsSent, requestsAllowed, requestsRejected, requestsFailed, status };
+  return { requestsSent, requestsAllowed, requestsRejected, requestsFailed, status: job.status };
 }
 
 function App() {
@@ -40,6 +37,12 @@ function App() {
   const jobsWithStats = useMemo(
     () => jobs.map((job) => ({ job, stats: getJobStats(job, events) })),
     [jobs, events]
+  );
+
+  useJobStatusEvents(
+    useCallback((event) => {
+      setJobs((prev) => prev.map((j) => (j.jobId === event.jobId ? { ...j, status: event.status } : j)));
+    }, [])
   );
 
   function handleJobStarted(data: {
@@ -58,8 +61,15 @@ function App() {
     setJobs((prev) => prev.map((j) => (j.jobId === jobId ? { ...j, status: "stopped" } : j)));
   }
 
-  const selectedJobEvents = events.filter((e) => e.jobId === selectedJobId);
-  const bucketedData = bucketEventsBySecond(selectedJobEvents, 30);
+  const selectedJobEvents = useMemo(
+    () => events.filter((e) => e.jobId === selectedJobId),
+    [events, selectedJobId]
+  );
+
+  const bucketedData = useMemo(
+    () => bucketEventsBySecond(selectedJobEvents, 30),
+    [selectedJobEvents]
+  );
 
   return (
     <div id="dashboard-root" className="min-h-screen flex flex-col gap-6 p-6">

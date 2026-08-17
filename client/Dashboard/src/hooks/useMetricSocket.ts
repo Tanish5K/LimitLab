@@ -34,7 +34,7 @@ export interface MetricsTick {
 const MAX_POINTS = 100;
 
 export function useMetricSocket() {
-  const [connected, setConnected] = useState(metricSocket.connected); // was: useState(false)
+  const [connected, setConnected] = useState(metricSocket.connected);
   const [ticks, setTicks] = useState<MetricsTick[]>([]);
 
   useEffect(() => {

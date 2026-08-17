@@ -117,27 +117,31 @@ export function startSimulation(config: TrafficConfig): string {
   });
 
   const startTime = Date.now();
+  let carry = 0;
 
   const interval = setInterval(() => {
     const elapsedSeconds = (Date.now() - startTime) / 1000;
 
     if (elapsedSeconds >= config.durationSeconds) {
-      clearInterval(interval);
-      updateJob(jobId, { status: "done" });
-      activeIntervals.delete(jobId);
-      console.log(`[traffic-gen] job ${jobId} done`);
-      return;
+        clearInterval(interval);
+        activeIntervals.delete(jobId);
+        updateJob(jobId, { status: "done" });
+        io?.emit("job-status-changed", { jobId, status: "done" });
+        console.log(`[traffic-gen] job ${jobId} done`);
+        return;
     }
 
     const targetRps = rpsAtTime(config, elapsedSeconds);
-    const requestsThisTick = Math.round((targetRps * TICK_MS) / 1000);
+    const requestsDue = carry + (targetRps * TICK_MS) / 1000;
+    const requestsThisTick = Math.floor(requestsDue);
+    carry = requestsDue - requestsThisTick;
 
     // Logging the current state of the traffic (you can comment it out if you want its not like I care or anything ._.)
     console.log(`[traffic-gen] t=${elapsedSeconds.toFixed(1)}s target=${targetRps}rps firing=${requestsThisTick}`);
 
     for (let i = 0; i < requestsThisTick; i++) {
-      const clientId = randomId(config.clients);
-      fireRequest(config, clientId, jobId);
+        const clientId = randomId(config.clients);
+        fireRequest(config, clientId, jobId);
     }
   }, TICK_MS);
 
@@ -152,6 +156,7 @@ export function stopSimulation(jobId: string): boolean {
   clearInterval(interval);
   activeIntervals.delete(jobId);
   updateJob(jobId, { status: "stopped" });
+  io?.emit("job-status-changed", { jobId, status: "stopped" });
   console.log(`[traffic-gen] job ${jobId} stopped manually`);
   return true;
 }
