@@ -15,76 +15,29 @@ interface JobsListProps {
   onStop: (jobId: string) => void;
 }
 
-function statusStyle(status: JobRecord["status"]): React.CSSProperties {
-  if (status === "running") return { color: "var(--ll-signal)" };
-  if (status === "stopped") return { color: "var(--ll-reject)" };
-  return { color: "var(--ll-text-dim)" };
-}
-
 export function JobsList({ jobsWithStats, selectedJobId, onSelect, onStop }: JobsListProps) {
+  if (jobsWithStats.length === 0) return <div className="ll-empty">No jobs yet. Start a workload below.</div>;
+
   return (
-    <section id="jobs-list-panel" className="chart-card">
-      <h2 className="chart-title">Jobs</h2>
-      <table id="jobs-table">
-        <thead>
-          <tr>
-            <th>job</th>
-            <th>pattern</th>
-            <th>rps</th>
-            <th>algorithm</th>
-            <th>cache</th>
-            <th>status</th>
-            <th>sent</th>
-            <th>allowed</th>
-            <th>rejected</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {jobsWithStats.map(({ job, stats }) => (
-            <tr
-              key={job.jobId}
-              className={job.jobId === selectedJobId ? "selected-job-row" : ""}
-              onClick={() => onSelect(job.jobId)}
-            >
-              <td className="text-[var(--ll-text)]">{job.jobId.slice(0, 8)}</td>
-              <td className="text-[var(--ll-text-dim)]">{job.trafficConfig.pattern}</td>
-              <td className="text-[var(--ll-text)]">{job.trafficConfig.rps}</td>
-              <td className="text-[var(--ll-text-dim)]">{job.rateLimiterConfig.algorithm}</td>
-              <td style={{ color: job.cacheConfig.enabled ? "var(--ll-warn)" : "var(--ll-text-faint)" }}>
-                {job.cacheConfig.enabled ? `on (${job.cacheConfig.ttlSeconds}s)` : "off"}
-              </td>
-              <td>
-                <span className="inline-flex items-center gap-1.5" style={statusStyle(stats.status)}>
-                  <span
-                    aria-hidden="true"
-                    className="inline-block h-1.5 w-1.5 rounded-full"
-                    style={{ background: "currentColor", boxShadow: "0 0 6px currentColor" }}
-                  />
-                  {stats.status}
-                </span>
-              </td>
-              <td className="text-[var(--ll-text)]">{stats.requestsSent}</td>
-              <td style={{ color: "var(--ll-signal)" }}>{stats.requestsAllowed}</td>
-              <td style={{ color: stats.requestsRejected > 0 ? "var(--ll-reject)" : "var(--ll-text-faint)" }}>
-                {stats.requestsRejected}
-              </td>
-              <td>
-                {stats.status === "running" && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onStop(job.jobId);
-                    }}
-                  >
-                    stop
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </section>
+    <div id="jobs-list-panel" className="ll-list">
+      {jobsWithStats.map(({ job, stats }) => {
+        const status = stats.status;
+        const statusLabel = status === "running" ? "Running" : status[0].toUpperCase() + status.slice(1);
+        return (
+          <div key={job.jobId} className={`ll-job ${job.jobId === selectedJobId ? "is-selected" : ""}`} onClick={() => onSelect(job.jobId)} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") onSelect(job.jobId); }}>
+            <div className="ll-job-icon" aria-hidden="true">▱</div>
+            <div className="ll-job-main">
+              <div className="ll-job-name" title={job.jobId}>{job.jobId.slice(0, 12)}</div>
+              <div className="ll-job-sub">{job.rateLimiterConfig.algorithm} · {job.trafficConfig.rps} req/s</div>
+              <div className="ll-job-stats"><span>{stats.requestsSent} sent</span><span style={{ color: "var(--ll-green)" }}>{stats.requestsAllowed} allowed</span><span style={{ color: stats.requestsRejected ? "var(--ll-red)" : undefined }}>{stats.requestsRejected} rejected</span></div>
+            </div>
+            <div style={{ display: "grid", justifyItems: "end", gap: 8 }}>
+              <span className="ll-job-status" data-status={status}><span className="ll-status-dot" />{statusLabel}</span>
+              {status === "running" && <button className="ll-btn-danger" onClick={(event) => { event.stopPropagation(); void onStop(job.jobId); }}>Stop</button>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
