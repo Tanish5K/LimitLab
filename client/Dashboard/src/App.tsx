@@ -76,7 +76,7 @@ function App() {
         <div className="ll-brand">
           <div className="ll-brand-mark" aria-hidden="true">ϟ</div>
           <span className="ll-brand-name">Limit Lab</span>
-          <span className="ll-beta">BETA</span>
+          <span className="ll-beta">Idk</span>
         </div>
         <div className="ll-connection-list" aria-label="service connections">
           <ConnectionStatus label="Gateway" connected={d.metricsConnected} />
@@ -85,7 +85,7 @@ function App() {
         <nav className="ll-nav">
           <a className="ll-nav-link is-active" href="#overview"><span className="ll-nav-icon">◌</span>Overview</a>
           <a className="ll-nav-link" href="#jobs"><span className="ll-nav-icon">▣</span>Jobs</a>
-          <a className="ll-nav-link" href="#traffic"><span className="ll-nav-icon">⌁</span>Traffic</a>
+          <a className="ll-nav-link" href="#request-log-panel"><span className="ll-nav-icon">⌁</span>Live Requests</a>
         </nav>
       </aside>
 
@@ -109,6 +109,22 @@ function App() {
           <div className="ll-topbar-actions">
             <button id="reset-metrics-btn" className="ll-btn-ghost" onClick={() => d.resetMetrics()}>Reset metrics</button>
             <button id="invalidate-cache-btn" className="ll-btn-ghost" onClick={() => d.invalidateCache()}>Invalidate cache</button>
+            <button type="button" className="ll-btn-primary" onClick={() => {
+              const jobsPanel = document.getElementById("jobs");
+              const details = document.getElementById("job-config-details") as HTMLDetailsElement | null;
+
+              if (details) details.open = true;
+
+              requestAnimationFrame(() => {
+                jobsPanel?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              });
+            }}
+            >
+            Configure job
+            </button>
           </div>
         </header>
 
@@ -123,7 +139,7 @@ function App() {
         </section>
 
         <PipelineDiagram className="ll-pipeline"/>
-
+        
         <div className="ll-layout">
           <div className="ll-main-column">
             <section id="traffic" className="ll-panel ll-chart-panel">
@@ -152,7 +168,7 @@ function App() {
             <section id="jobs" className="ll-panel">
               <div className="ll-panel-header"><div><div className="ll-kicker">Active workloads</div><h2 className="ll-panel-title">Jobs</h2></div><span className="ll-panel-meta">{d.jobsWithStats.length} total</span></div>
               <JobsList jobsWithStats={d.jobsWithStats} selectedJobId={d.selectedJobId} onSelect={d.setSelectedJobId} onStop={d.handleStopJob} />
-              <details className="ll-form-details">
+              <details id="job-config-details" className="ll-form-details">
                 <summary className="ll-start-summary"><span>＋</span> Start a new job</summary>
                 <div className="ll-form-panel"><JobConfigForm onJobStarted={d.handleJobStarted} /></div>
               </details>

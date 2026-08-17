@@ -266,3 +266,38 @@ body::before {
   .ll-pipeline { min-height: 220px; }
   .ll-pipeline svg { height: 145px; min-width: 760px; }
 }
+
+/* Let the form respond to the width of its card */
+.ll-panel:has(#job-config-form) {
+  container-type: inline-size;
+}
+
+.ll-form-field,
+.ll-form-fieldset {
+  min-width: 0;
+}
+
+.ll-form-field input,
+.ll-form-field select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.ll-form-field select {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container (max-width: 620px) {
+  .ll-form-fieldset--wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .ll-form-fieldset,
+  .ll-form-fieldset--wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
