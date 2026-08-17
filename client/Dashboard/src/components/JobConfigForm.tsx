@@ -9,7 +9,7 @@ export function JobConfigForm({ onJobStarted }: JobConfigFormProps) {
   const f = useJobConfigForm({ onJobStarted });
 
   return (
-    <form id="job-config-form" onSubmit={f.handleSubmit} className="chart-card flex flex-col gap-4">
+    <form id="job-config-form" onSubmit={f.handleSubmit} className="chart-card flex flex-col gap-6">
       <h2 className="chart-title">New Job</h2>
 
       <fieldset id="traffic-config-fields" className="flex flex-wrap gap-4">

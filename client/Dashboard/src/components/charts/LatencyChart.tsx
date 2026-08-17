@@ -10,12 +10,20 @@ export function LatencyChart({ data }: { data: SecondBucket[] }) {
     <div id="latency-chart" className="chart-card">
       <h3 className="chart-title">Avg Latency (ms)</h3>
       <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="second" tickFormatter={formatTime} minTickGap={30} />
-          <YAxis unit="ms" />
-          <Tooltip labelFormatter={(v) => formatTime(Number(v))} />
-          <Line type="monotone" dataKey="avgLatencyMs" name="avg latency" dot={false} isAnimationActive={false} />
+        <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: -12 }}>
+          <CartesianGrid strokeDasharray="2 6" vertical={false} />
+          <XAxis dataKey="second" tickFormatter={formatTime} minTickGap={30} tickLine={false} axisLine={false} />
+          <YAxis unit="ms" tickLine={false} axisLine={false} width={48} />
+          <Tooltip labelFormatter={(v) => formatTime(Number(v))} cursor={{ stroke: "#3ee6b0", strokeOpacity: 0.25 }} />
+          <Line
+            type="monotone"
+            dataKey="avgLatencyMs"
+            name="avg latency"
+            stroke="#3ee6b0"
+            strokeWidth={1.75}
+            dot={false}
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

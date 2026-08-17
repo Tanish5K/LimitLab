@@ -1,219 +1,612 @@
 /* ============================================================
-   GLOBAL LAYOUT
-   Targets the outermost page wrapper and top header bar.
+   Limit Lab — Signal / NOC console theme
+   Restyle layer only. No logic, no data contracts touched.
+   Safe to drop into the existing Vite + React + Tailwind app.
    ============================================================ */
-#dashboard-root {
-  /* whole-page container */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
+
+:root {
+  /* core palette — near-black console, one phosphor accent, red for faults */
+  --ll-bg: #080b0f;
+  --ll-bg-2: #0b1016;
+  --ll-surface: #0e141b;
+  --ll-surface-2: #111a22;
+  --ll-line: #1b2731;
+  --ll-line-soft: #141d25;
+  --ll-text: #c9d6e0;
+  --ll-text-dim: #7c8b98;
+  --ll-text-faint: #4d5a66;
+
+  --ll-signal: #3ee6b0;      /* live / active / allowed */
+  --ll-signal-dim: #1c8f6e;
+  --ll-reject: #ff5468;      /* rejected / error only */
+  --ll-warn: #f4c04d;        /* cache / neutral highlight */
+
+  --ll-font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --ll-font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 }
 
-.dashboard-title {
-  /* "Limit Lab" heading text, top-left */
-  font-size: 1.5rem;
-  font-weight: 700;
+/* ---- base canvas ---------------------------------------------------- */
+html {
+  background-color: var(--ll-bg);
 }
 
-#dashboard-header {
-  /* row containing the title + connection status indicators */
+body {
+  margin: 0;
+  background-color: var(--ll-bg);
+  color: var(--ll-text);
+  font-family: var(--ll-font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* faint engineering grid + scanline texture, very low opacity */
+  background-image:
+    linear-gradient(rgba(62, 230, 176, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(62, 230, 176, 0.025) 1px, transparent 1px),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.014) 0px,
+      rgba(255, 255, 255, 0.014) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  background-size: 40px 40px, 40px 40px, 100% 3px;
 }
 
-#metrics-connection-status {
-  /* "gateway: connected/disconnected" text */
-}
-
-#trafficgen-connection-status {
-  /* "traffic-gen: connected/disconnected" text */
+/* ---- shared numeric / data typography ------------------------------- */
+.ll-mono,
+#jobs-table td,
+#request-events-table td {
+  font-family: var(--ll-font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ============================================================
-   SHARED CARD STYLING
-   Reused by every panel below (config form, jobs list, each
-   chart, algorithm state view, live requests table). Restyling
-   this affects all of them at once — use per-section overrides
-   below if you want one panel to look different from the rest.
+   Panels  (.chart-card / .chart-title used across components)
    ============================================================ */
 .chart-card {
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 1rem;
-}
-
-.chart-title {
-  /* heading text inside any .chart-card */
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-/* ============================================================
-   JOB CONFIG FORM
-   The "New Job" panel where traffic/rate-limiter/cache settings
-   are chosen before starting a run.
-   ============================================================ */
-#job-config-form {
-  /* the whole form */
-}
-
-#traffic-config-fields {
-  /* pattern / rps / duration / clients / resource mode / spike inputs */
-}
-
-#rate-limiter-config-fields {
-  /* algorithm dropdown + capacity/refill/drain/window inputs */
-}
-
-#cache-config-fields {
-  /* cache enabled checkbox + TTL input */
-}
-
-#start-job-btn {
-  /* "start job" submit button */
-}
-
-/* ============================================================
-   JOBS LIST
-   Table of every job started this session, selectable to view
-   its charts below.
-   ============================================================ */
-#jobs-list-panel {
-  /* whole panel wrapping the jobs table */
-}
-
-#jobs-table {
-  /* the table element itself */
-  border-collapse: collapse;
-  width: 100%;
-}
-
-#jobs-table th,
-#jobs-table td {
-  text-align: left;
-  padding: 4px 8px;
-  border-bottom: 1px solid #eee;
-}
-
-.selected-job-row {
-  /* highlights whichever job row is currently selected */
-  background-color: #eef;
-  cursor: pointer;
-}
-
-/* ============================================================
-   GLOBAL METRICS PANEL
-   Gateway-wide totals across ALL jobs combined (not per-job) —
-   allowed/rejected/queued/cache hits/misses/hit rate/latency,
-   plus reset + invalidate-cache controls.
-   ============================================================ */
-#global-metrics-panel {
-  /* whole panel */
-}
-
-#global-metrics-summary {
-  /* row of stat labels e.g. "allowed: 83" */
-}
-
-#reset-metrics-btn {
-  /* clears rate-limiter + cache totals */
-}
-
-#invalidate-cache-btn {
-  /* clears all Redis cache keys */
-}
-
-/* ============================================================
-   PER-JOB LIVE CHARTS
-   Only rendered once a job is selected. Each chart is its own
-   .chart-card, individually targetable by id.
-   ============================================================ */
-#job-charts-panel {
-  /* grid wrapping all four charts below */
-}
-
-#requests-per-sec-chart {
-  /* line chart: total requests per second, selected job only */
-}
-
-#allowed-rejected-chart {
-  /* stacked bar chart: allowed (green) vs rejected (red) per second */
-}
-
-#cache-hit-rate-chart {
-  /* line chart: cache hit rate %, selected job only */
-}
-
-#latency-chart {
-  /* line chart: avg response latency (ms), selected job only */
-}
-
-/* ============================================================
-   ALGORITHM LIVE STATE
-   Shape changes depending on which algorithm is active:
-   token bucket shows per-client gauges, leaky bucket shows a
-   single queue-depth number, sliding window shows per-client
-   counts/estimates.
-   ============================================================ */
-#algorithm-state-view {
-  /* whole panel, contents vary by active algorithm */
-}
-
-.token-gauge-track {
-  /* background track behind each client's token gauge bar */
-  height: 10px;
-  background-color: #eee;
+  position: relative;
+  background:
+    linear-gradient(180deg, var(--ll-surface) 0%, var(--ll-bg-2) 100%);
+  border: 1px solid var(--ll-line);
   border-radius: 4px;
+  padding: 1rem 1.15rem 1.15rem;
   overflow: hidden;
 }
 
-.token-gauge-fill {
-  /* the green fill inside a token gauge, width = tokens/capacity */
-  height: 100%;
-  background-color: #4ade80;
+/* corner tick marks — instrument bezel feel */
+.chart-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--ll-signal), var(--ll-signal)) left top / 10px 1px no-repeat,
+    linear-gradient(var(--ll-signal), var(--ll-signal)) left top / 1px 10px no-repeat,
+    linear-gradient(var(--ll-signal), var(--ll-signal)) right bottom / 10px 1px no-repeat,
+    linear-gradient(var(--ll-signal), var(--ll-signal)) right bottom / 1px 10px no-repeat;
+  opacity: 0.35;
+}
+
+.chart-title {
+  margin: 0 0 0.9rem;
+  font-family: var(--ll-font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ll-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-title::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ll-signal);
+  box-shadow: 0 0 8px var(--ll-signal);
+  animation: ll-pulse 2.4s ease-in-out infinite;
 }
 
 /* ============================================================
-   LIVE REQUESTS TABLE
-   Raw per-request feed for the selected job — newest first,
-   capped to the most recent 25 rows.
+   Recharts surface treatment (thin traced lines, faint grid)
    ============================================================ */
-#request-events-panel {
-  /* whole panel */
+.chart-card .recharts-cartesian-grid line {
+  stroke: var(--ll-line-soft);
 }
-
-#request-events-table {
-  /* the table element itself */
-  border-collapse: collapse;
-  width: 100%;
+.chart-card .recharts-cartesian-axis-line,
+.chart-card .recharts-cartesian-axis-tick-line {
+  stroke: var(--ll-line);
 }
-
-#request-events-table th,
-#request-events-table td {
-  text-align: left;
-  padding: 4px 8px;
-  border-bottom: 1px solid #eee;
+.chart-card .recharts-text {
+  fill: var(--ll-text-faint);
+  font-family: var(--ll-font-mono);
+  font-size: 10px;
+}
+.chart-card .recharts-default-legend {
+  font-family: var(--ll-font-mono);
+  font-size: 11px !important;
+}
+.chart-card .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--ll-bg) !important;
+  border: 1px solid var(--ll-line) !important;
+  border-radius: 3px;
+  font-family: var(--ll-font-mono) !important;
+  font-size: 11px;
+}
+/* phosphor bloom on traced lines — color-agnostic so it suits any trace */
+.chart-card .recharts-line-curve {
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.22));
 }
 
 /* ============================================================
-   MISC
+   Control panel form  (#job-config-form)
    ============================================================ */
-#no-job-selected-message {
-  /* shown in place of charts/table when no job is selected yet */
-}
-
-/* ============================================================
-   BASE ELEMENT DEFAULTS
-   Generic fallback styling for raw form elements/body, not
-   scoped to any specific component.
-   ============================================================ */
-body {
+#job-config-form fieldset {
+  border: 1px solid var(--ll-line-soft);
+  border-radius: 3px;
+  padding: 0.85rem 1rem 1rem;
   margin: 0;
-  font-family: sans-serif;
+  position: relative;
 }
 
-input,
-select,
-button {
-  padding: 4px 6px;
+#job-config-form fieldset::before {
+  position: absolute;
+  top: -0.6rem;
+  left: 0.75rem;
+  padding: 0 0.4rem;
+  background: var(--ll-bg-2);
+  font-family: var(--ll-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ll-signal);
+}
+#traffic-config-fields::before { content: "// traffic"; }
+#rate-limiter-config-fields::before { content: "// rate limiter"; }
+#cache-config-fields::before { content: "// cache"; }
+
+#job-config-form label {
+  font-family: var(--ll-font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ll-text-dim);
+  gap: 0.35rem;
 }
 
-button {
+#job-config-form input[type="number"],
+#job-config-form select {
+  background: var(--ll-bg);
+  border: 1px solid var(--ll-line);
+  border-radius: 3px;
+  color: var(--ll-text);
+  font-family: var(--ll-font-mono);
+  font-size: 0.82rem;
+  padding: 0.4rem 0.55rem;
+  min-width: 7rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+#job-config-form input[type="number"]:focus,
+#job-config-form select:focus {
+  outline: none;
+  border-color: var(--ll-signal);
+  box-shadow: 0 0 0 1px rgba(62, 230, 176, 0.35), 0 0 12px rgba(62, 230, 176, 0.15);
+}
+#job-config-form input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#job-config-form input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--ll-signal);
+}
+
+#start-job-btn {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid var(--ll-signal);
+  color: var(--ll-signal);
+  font-family: var(--ll-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.6rem 1.4rem;
+  border-radius: 3px;
   cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+#start-job-btn:hover:not(:disabled) {
+  background: rgba(62, 230, 176, 0.12);
+  box-shadow: 0 0 16px rgba(62, 230, 176, 0.25);
+}
+#start-job-btn:disabled {
+  border-color: var(--ll-line);
+  color: var(--ll-text-faint);
+  cursor: wait;
+}
+
+/* ============================================================
+   Technical log tables (#jobs-table / #request-events-table)
+   ============================================================ */
+#jobs-table,
+#request-events-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--ll-font-mono);
+  font-size: 0.78rem;
+}
+
+#jobs-table thead th,
+#request-events-table thead th {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ll-text-faint);
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--ll-line);
+  white-space: nowrap;
+}
+
+#jobs-table tbody td,
+#request-events-table tbody td {
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--ll-line-soft);
+  color: var(--ll-text);
+  white-space: nowrap;
+}
+
+/* jobs table is clickable, done/stopped/running distinction via mono cues */
+#jobs-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+#jobs-table tbody tr:hover {
+  background: rgba(62, 230, 176, 0.05);
+}
+#jobs-table tbody tr.selected-job-row {
+  background: rgba(62, 230, 176, 0.09);
+  box-shadow: inset 2px 0 0 var(--ll-signal);
+}
+
+/* row action buttons (stop) */
+#jobs-table button {
+  background: transparent;
+  border: 1px solid var(--ll-reject);
+  color: var(--ll-reject);
+  font-family: var(--ll-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+#jobs-table button:hover {
+  background: rgba(255, 84, 104, 0.15);
+}
+
+/* live requests log scrolls like a console */
+#request-events-panel #request-events-table {
+  display: block;
+  max-height: 20rem;
+  overflow-y: auto;
+}
+#request-events-table thead,
+#request-events-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+#request-events-table tbody tr {
+  animation: ll-logrow-in 0.35s ease;
+}
+
+/* scrollbar */
+#request-events-panel #request-events-table::-webkit-scrollbar {
+  width: 8px;
+}
+#request-events-panel #request-events-table::-webkit-scrollbar-thumb {
+  background: var(--ll-line);
+  border-radius: 4px;
+}
+
+/* ============================================================
+   Algorithm live-state — token bucket fuel gauges
+   ============================================================ */
+.token-gauge-track {
+  height: 12px;
+  background: var(--ll-bg);
+  border: 1px solid var(--ll-line);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.token-gauge-track::after {
+  /* segmented fuel-gauge ticks overlay */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 11px,
+    rgba(0, 0, 0, 0.45) 11px,
+    rgba(0, 0, 0, 0.45) 12px
+  );
+  pointer-events: none;
+}
+.token-gauge-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ll-signal-dim), var(--ll-signal));
+  box-shadow: 0 0 10px rgba(62, 230, 176, 0.5);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================
+   Reusable signal / status light  (.ll-status-light)
+   ============================================================ */
+.ll-status-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ll-font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ll-text-dim);
+}
+.ll-status-light .ll-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ll-text-faint);
+}
+.ll-status-light[data-live="true"] {
+  color: var(--ll-signal);
+}
+.ll-status-light[data-live="true"] .ll-dot {
+  background: var(--ll-signal);
+  box-shadow: 0 0 10px var(--ll-signal);
+  animation: ll-pulse 1.8s ease-in-out infinite;
+}
+
+/* ============================================================
+   App shell — top bar, sections, instrument cluster
+   ============================================================ */
+#dashboard-root {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* top bar */
+#dashboard-header {
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ll-line);
+}
+.dashboard-title {
+  margin: 0;
+  font-family: var(--ll-font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ll-text);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.dashboard-title::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--ll-signal);
+  box-shadow: 0 0 12px var(--ll-signal);
+}
+.dashboard-title::after {
+  content: "// gateway control";
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--ll-text-faint);
+}
+
+/* connection status cluster */
+#metrics-connection-status,
+#trafficgen-connection-status {
+  /* the spans carry .ll-status-light in the restyled JSX */
+}
+
+/* reusable "// section" label */
+.ll-section-label {
+  font-family: var(--ll-font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ll-text-dim);
+  margin: 0 0 0.75rem;
+}
+.ll-section-label::before {
+  content: "// ";
+  color: var(--ll-signal);
+}
+
+/* ghost/utility buttons (reset metrics / invalidate cache) */
+.ll-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--ll-line);
+  color: var(--ll-text-dim);
+  font-family: var(--ll-font-mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.8rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.ll-btn-ghost:hover {
+  border-color: var(--ll-signal);
+  color: var(--ll-signal);
+  background: rgba(62, 230, 176, 0.08);
+}
+#invalidate-cache-btn:hover {
+  border-color: var(--ll-warn);
+  color: var(--ll-warn);
+  background: rgba(244, 192, 77, 0.08);
+}
+
+/* instrument-cluster row of big monospace stats */
+#global-metrics-summary {
+  border-top: 1px solid var(--ll-line-soft);
+  padding-top: 1rem;
+  margin-top: 0.25rem;
+}
+.ll-metric {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.25rem;
+  min-width: 5.5rem;
+}
+.ll-metric__value {
+  font-family: var(--ll-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ll-text);
+}
+.ll-metric--good .ll-metric__value { color: var(--ll-signal); }
+.ll-metric--bad .ll-metric__value { color: var(--ll-reject); }
+.ll-metric--warn .ll-metric__value { color: var(--ll-warn); }
+.ll-metric__label {
+  font-family: var(--ll-font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ll-text-faint);
+}
+
+/* empty state placeholder */
+#no-job-selected-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 12rem;
+  border: 1px dashed var(--ll-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.008);
+  font-family: var(--ll-font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ll-text-faint);
+}
+#no-job-selected-message::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ll-text-faint);
+}
+
+/* ============================================================
+   Pipeline diagram (signature ambient component)
+   ============================================================ */
+.ll-pipeline {
+  position: relative;
+  border: 1px solid var(--ll-line);
+  border-radius: 4px;
+  background:
+    radial-gradient(120% 140% at 50% -20%, rgba(62, 230, 176, 0.06), transparent 55%),
+    linear-gradient(180deg, var(--ll-surface) 0%, var(--ll-bg-2) 100%);
+  padding: 1.5rem 1.25rem 1.25rem;
+  overflow: hidden;
+}
+.ll-pipeline__label {
+  position: absolute;
+  top: 0.7rem;
+  left: 1rem;
+  font-family: var(--ll-font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ll-text-faint);
+}
+.ll-pipeline__stage-label {
+  font-family: var(--ll-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--ll-text-dim);
+}
+.ll-pipeline__stage-sub {
+  font-family: var(--ll-font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.05em;
+  fill: var(--ll-text-faint);
+}
+
+/* traveling signal dots along wires */
+.ll-flow-dot {
+  offset-rotate: 0deg;
+  fill: var(--ll-signal);
+  filter: drop-shadow(0 0 5px var(--ll-signal));
+}
+.ll-flow-dot--reject {
+  fill: var(--ll-reject);
+  filter: drop-shadow(0 0 5px var(--ll-reject));
+}
+
+@keyframes ll-flow {
+  from { motion-offset: 0%; offset-distance: 0%; }
+  to { motion-offset: 100%; offset-distance: 100%; }
+}
+
+/* node pulse ring */
+.ll-node-ring {
+  transform-origin: center;
+  animation: ll-node-ping 3s ease-out infinite;
+}
+
+/* ============================================================
+   Keyframes
+   ============================================================ */
+@keyframes ll-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes ll-logrow-in {
+  from { opacity: 0; transform: translateY(-4px); background: rgba(62, 230, 176, 0.08); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ll-node-ping {
+  0% { transform: scale(0.8); opacity: 0.7; }
+  70% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+@keyframes ll-dash {
+  to { stroke-dashoffset: -1000; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-title::before,
+  .ll-status-light[data-live="true"] .ll-dot,
+  .ll-node-ring,
+  .ll-flow-dot,
+  .ll-flow-dot--reject,
+  #request-events-table tbody tr {
+    animation: none !important;
+  }
 }

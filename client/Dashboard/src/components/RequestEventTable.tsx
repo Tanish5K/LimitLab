@@ -1,5 +1,18 @@
 import type { RequestEvent } from "../hooks/useTrafficSocket";
 
+function statusColor(event: RequestEvent) {
+  if (event.failed) return "var(--ll-reject)";
+  if (event.status === 429) return "var(--ll-reject)";
+  if (event.status !== null && event.status < 400) return "var(--ll-signal)";
+  return "var(--ll-warn)";
+}
+
+function cacheColor(cacheStatus: RequestEvent["cacheStatus"]) {
+  if (cacheStatus === "cache-hit") return "var(--ll-signal)";
+  if (cacheStatus === "cache-miss") return "var(--ll-text-dim)";
+  return "var(--ll-text-faint)";
+}
+
 export function RequestEventsTable({ events }: { events: RequestEvent[] }) {
   const recent = [...events].reverse().slice(0, 25);
 
@@ -20,12 +33,12 @@ export function RequestEventsTable({ events }: { events: RequestEvent[] }) {
         <tbody>
           {recent.map((event, i) => (
             <tr key={`${event.timestamp}-${i}`}>
-              <td>{new Date(event.timestamp).toLocaleTimeString()}</td>
-              <td>{event.clientId}</td>
-              <td>{event.resourceId}</td>
-              <td>{event.failed ? "FAILED" : event.status}</td>
-              <td>{event.cacheStatus}</td>
-              <td>{event.durationMs}ms</td>
+              <td className="text-[var(--ll-text-faint)]">{new Date(event.timestamp).toLocaleTimeString()}</td>
+              <td className="text-[var(--ll-text-dim)]">{event.clientId}</td>
+              <td className="text-[var(--ll-text-dim)]">{event.resourceId}</td>
+              <td style={{ color: statusColor(event) }}>{event.failed ? "FAILED" : event.status}</td>
+              <td style={{ color: cacheColor(event.cacheStatus) }}>{event.cacheStatus}</td>
+              <td className="text-[var(--ll-text)]">{event.durationMs}ms</td>
             </tr>
           ))}
         </tbody>
