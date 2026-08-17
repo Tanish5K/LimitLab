@@ -3,6 +3,10 @@ import { recordEvent } from "../metricStore";
 
 const states = new Map<string, number[]>();
 
+export function resetSlidingWindowLog() {
+  states.clear();
+}
+
 export function createSlidingWindowLogMiddleware(config: { maxRequests: number; windowMs: number }) {
   return (req: Request, res: Response, next: NextFunction) => {
     const clientId = (req.headers["x-client-id"] as string) || "anonymous";

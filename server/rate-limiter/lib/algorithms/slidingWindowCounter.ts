@@ -9,6 +9,10 @@ interface CounterState {
 
 const states = new Map<string, CounterState>();
 
+export function resetSlidingWindowCounter() {
+  states.clear();
+}
+
 export function createSlidingWindowCounterMiddleware(config: { maxRequests: number; windowMs: number }) {
   return (req: Request, res: Response, next: NextFunction) => {
     const clientId = (req.headers["x-client-id"] as string) || "anonymous";

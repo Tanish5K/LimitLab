@@ -2,6 +2,7 @@ import { Router } from "express";
 import { getConfig, updateConfig } from "../lib/config";
 import { getRateSummary, resetMetrics } from "../lib/metricStore";
 import { getIoInstance } from "../../gateway/lib/socket";
+import { resetAlgorithmState } from "../lib/algorithms/reset";
 
 const router = Router();
 
@@ -11,6 +12,7 @@ router.get("/config", (req, res) => {
 
 router.post("/config", (req, res) => {
   updateConfig(req.body);
+  resetAlgorithmState();
   const newConfig = getConfig();
   getIoInstance().emit("rate-limiter-config-changed", newConfig);
   res.json(newConfig);

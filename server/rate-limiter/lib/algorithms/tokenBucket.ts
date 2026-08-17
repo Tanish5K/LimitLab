@@ -9,6 +9,10 @@ interface Bucket {
 
 const buckets = new Map<string, Bucket>();
 
+export function resetTokenBuckets() {
+  buckets.clear();
+}
+
 export function createTokenBucketMiddleware(config: { capacity: number; refillRatePerSec: number }) {
   return (req: Request, res: Response, next: NextFunction) => {
     const clientId = (req.headers["x-client-id"] as string) || "anonymous";

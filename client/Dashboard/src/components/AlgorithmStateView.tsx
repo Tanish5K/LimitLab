@@ -20,10 +20,16 @@ export function AlgorithmStateView({ algorithmState }: { algorithmState: Metrics
   }
 
   if (algorithmState.type === "token-bucket") {
+    const sortedClients = [...algorithmState.clients].sort((a, b) =>
+      String(a.clientId).localeCompare(String(b.clientId), undefined, {
+        numeric: true,
+      })
+    );
+
     return <section id="algorithm-state-view" className="ll-panel">
       <div className="ll-panel-header"><div><div className="ll-kicker">Algorithm state</div><h2 className="ll-panel-title">Token bucket</h2></div><span className="ll-panel-meta">per client</span></div>
       <div className="ll-algorithm-grid">
-        {algorithmState.clients.map((client) => {
+        {sortedClients.map((client) => {
           const percentage = client.capacity > 0 ? Math.max(0, Math.min(100, client.tokens / client.capacity * 100)) : 0;
           return <div className={`ll-client-card ${percentage < 20 ? "is-hot" : ""}`} key={client.clientId}>
             <div className="ll-client-top"><span className="ll-client-id">Client {client.clientId}</span><span>{client.tokens}/{client.capacity}</span></div>
@@ -43,6 +49,20 @@ export function AlgorithmStateView({ algorithmState }: { algorithmState: Metrics
     </section>;
   }
 
-  if (algorithmState.type === "sliding-window-log") return <SlidingWindowView mode="log" clients={algorithmState.clients} />;
-  return <SlidingWindowView mode="counter" clients={algorithmState.clients} />;
+  if (algorithmState.type === "sliding-window-log") {
+    const sortedClients = [...algorithmState.clients].sort((a, b) =>
+      String(a.clientId).localeCompare(String(b.clientId), undefined, {
+        numeric: true,
+      })
+    );
+    return <SlidingWindowView mode="log" clients={sortedClients} />;
+  }
+  else {
+    const sortedClients = [...algorithmState.clients].sort((a, b) =>
+      String(a.clientId).localeCompare(String(b.clientId), undefined, {
+        numeric: true,
+      })
+    );
+    return <SlidingWindowView mode="counter" clients={sortedClients} />;
+  }
 }

@@ -115,10 +115,10 @@ function App() {
         <section id="overview" aria-labelledby="overview-title">
           <h1 id="overview-title" className="visually-hidden">Limit Lab overview</h1>
           <div className="ll-stat-grid">
-            <StatCard label="Allowed requests" value={formatNumber(allowed)} change={allowedDelta >= 0 ? `+${formatNumber(allowedDelta)}` : formatNumber(allowedDelta)} note="vs. previous window" color="#63d58a" values={[Math.max(0, allowed - allowedDelta * 2), Math.max(0, allowed - allowedDelta), allowed]} />
-            <StatCard label="Rejected requests" value={formatNumber(rejected)} change={rejectedDelta <= 0 ? formatNumber(rejectedDelta) : `+${formatNumber(rejectedDelta)}`} note="vs. previous window" color="#ed777d" values={[Math.max(0, rejected - rejectedDelta * 2), Math.max(0, rejected - rejectedDelta), rejected]} />
-            <StatCard label="Cache hit rate" value={tick ? `${hitRate.toFixed(1)}%` : "n/a"} change={tick ? `+${(tick.cache.hitsDelta / Math.max(tick.cache.total, 1) * 100).toFixed(1)}%` : "—"} note="vs. previous window" color="#8a7cf3" values={[Math.max(0, hitRate - 2), Math.max(0, hitRate - 0.8), hitRate]} />
-            <StatCard label="Avg. latency" value={`${formatNumber(latency)}ms`} change={latency ? `${(latency > 0 ? -1 : 0).toFixed(1)}%` : "—"} note="latest gateway sample" color="#eac457" values={[latency + 2, latency + 1, latency]} />
+            <StatCard label="Allowed requests" value={formatNumber(allowed)} change={allowedDelta >= 0 ? `+${formatNumber(allowedDelta)}` : formatNumber(allowedDelta)} note="Total for Job" color="#63d58a" values={[Math.max(0, allowed - allowedDelta * 2), Math.max(0, allowed - allowedDelta), allowed]} />
+            <StatCard label="Rejected requests" value={formatNumber(rejected)} change={rejectedDelta <= 0 ? formatNumber(rejectedDelta) : `+${formatNumber(rejectedDelta)}`} note="Total for Job" color="#ed777d" values={[Math.max(0, rejected - rejectedDelta * 2), Math.max(0, rejected - rejectedDelta), rejected]} />
+            <StatCard label="Cache hit rate" value={tick ? `${hitRate.toFixed(1)}%` : "n/a"} change={tick ? `+${(tick.cache.hitsDelta / Math.max(tick.cache.total, 1) * 100).toFixed(1)}%` : "—"} note="% Throughout Job" color="#8a7cf3" values={[Math.max(0, hitRate - 2), Math.max(0, hitRate - 0.8), hitRate]} />
+            <StatCard label="Avg. latency" value={`${formatNumber(latency)}ms`} change={latency ? `${(latency > 0 ? -1 : 0).toFixed(1)}%` : "—"} note="Average Throughout" color="#eac457" values={[latency + 2, latency + 1, latency]} />
           </div>
         </section>
 
