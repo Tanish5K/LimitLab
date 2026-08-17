@@ -74,7 +74,9 @@ function App() {
     <div className={`ll-app ${sidebarOpen ? "" : "ll-sidebar-collapsed"}`}>
       <aside id="limit-lab-sidebar" className="ll-sidebar" aria-label="Limit Lab navigation">
         <div className="ll-brand">
-          <div className="ll-brand-mark" aria-hidden="true">ϟ</div>
+          <div className="ll-brand-mark" aria-hidden="true">
+            <img src="/favicon.svg" alt="" />
+          </div>
           <span className="ll-brand-name">Limit Lab</span>
           <span className="ll-beta">Idk</span>
         </div>
