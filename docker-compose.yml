@@ -1,11 +1,60 @@
 services:
   redis:
     image: redis:8-alpine
-    container_name: limit-lab-redis
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
+
+  backend:
+    build: ./server
+    command: npx tsx backend/index.ts
+    environment:
+      BACKEND_PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      - redis
+
+  gateway:
+    build: ./server
+    command: npx tsx gateway/index.ts
+    environment:
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      BACKEND_URL: http://backend:4000
+      CLIENT_URL: http://localhost:5173
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redis
+      - backend
+
+  traffic-generator:
+    build: ./server
+    command: npx tsx traffic-generator/src/index.ts
+    environment:
+      TRAFFIC_GEN_PORT: 5000
+      GATEWAY_URL: http://gateway:3000
+      CLIENT_URL: http://localhost:5173
+    ports:
+      - "5000:5000"
+    depends_on:
+      - gateway
+
+  dashboard:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    environment:
+      VITE_SERVER_URL: http://localhost:3000
+      VITE_TRAFFIC_GEN_URL: http://localhost:5000
+      VITE_BACKEND_URL: http://localhost:4000
+    ports:
+      - "4173:4173"
+    depends_on:
+      - gateway
+      - traffic-generator
 
 volumes:
   redis-data:
